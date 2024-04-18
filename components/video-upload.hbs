@@ -1,4 +1,4 @@
-<DModal @closeModal={{this.closeModal}} class="video-upload-modal">
+<DModal @title={{theme-prefix "upload.video"}} @closeModal={{@closeModal}} class="video-upload-modal">
   <:body>
     <div class="video-details">
       {{input type="file" id="video-file" accept="video/mp4,video/x-m4v,video/*" }}

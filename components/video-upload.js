@@ -7,7 +7,6 @@ import showModal from "discourse/lib/show-modal";
 const STATUS_POLLING_INTERVAL_MILLIS = 10000;
 
 export default class VideoUploadModal extends Component {
-  @service modal;
   @service currentUser;
 
   @tracked uploadProgress = 0;
@@ -127,93 +126,4 @@ export default class VideoUploadModal extends Component {
     };
 
     const ytScopes = ["https://www.googleapis.com/auth/youtube", "https://www.googleapis.com/auth/youtube.readonly"];
-    gapi.load("client:auth2", function () {
-      gapi.client
-        .init({
-          clientId: settings.youtube_api_client_id,
-          scope: ytScopes.join(" "),
-        })
-        .then(function () {
-          if (!(gapi.auth2.getAuthInstance().isSignedIn.get() && checkScopeAndUpload()))
-            gapi.auth2.getAuthInstance().signIn().then(checkScopeAndUpload);
-        });
-    });
-  }
-
-  sendFileToYoutube() {
-    const accessToken = gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse().access_token;
-    const component = this;
-    const file = $("#video-file").prop("files");
-    $("#youtube-upload-btn").attr("disabled", "disabled");
-
-    component.setProperties({
-      isUploading: true,
-      isAuthing: false,
-    });
-
-    const metadata = {
-      snippet: {
-        title: $("#video-title").val(),
-        description: $("#video-description").val(),
-      },
-      status: {
-        privacyStatus: $("#video-scope").val(),
-      },
-    };
-    const uploader = new YoutubeUpload({
-      baseUrl: "https://www.googleapis.com/upload/youtube/v3/videos",
-      file: file[0],
-      token: accessToken,
-      metadata: metadata,
-      params: {
-        part: Object.keys(metadata).join(","),
-      },
-      onError: function (data) {
-        let message = data;
-        // Assuming the error is raised by the YouTube API, data will be
-        // a JSON string with error.message set. That may not be the
-        // only time onError will be raised, though.
-        try {
-          const errorResponse = JSON.parse(data);
-          message = errorResponse.error.message;
-        } finally {
-          console.error(message);
-          component.setProperties({
-            isUploading: false,
-            uploadError: message,
-          });
-        }
-      }.bind(this),
-      onProgress: function (data) {
-        component.updateProgress(data, component);
-      }.bind(this),
-      onComplete: function (data) {
-        const uploadResponse = JSON.parse(data);
-        component.ytVideoId = uploadResponse.id;
-
-        component.setProperties({
-          uploadProgress: 0,
-          isUploading: false,
-          isProcessing: true,
-        });
-        $("#youtube-upload-btn").removeAttr("disabled");
-        component.youtubeUploadStatus();
-      }.bind(this),
-    });
-    uploader.upload();
-  }
-
-  youtubeUploadStatus() {
-    const composer = getOwner(this).lookup("controller:composer");
-    const component = this;
-    gapi.client.request({
-      path: "/youtube/v3/videos",
-      params: {
-        part: "status,player",
-        id: component.ytVideoId,
-      },
-      callback: function (response) {
-        if (response.error) {
-          // The status polling failed.
-          console.log(response.error.message);
-          setTimeout(component.youtu
+    gapi.load("client:auth2", function
